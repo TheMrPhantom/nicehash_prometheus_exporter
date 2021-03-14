@@ -96,7 +96,8 @@ def get_Infos_From_NiceHash(http_method, endpoint, query_params):
         r = requests.request(http_method,
                              url,
                              headers=header,
-                             params=query_params)
+                             params=query_params,
+                             timeout=10)
         return json.loads(r.text)
     except:
         print("Fail")
