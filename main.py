@@ -61,7 +61,7 @@ def sign_request(api_key, api_secret, orga_id, url, parameter, http_method, time
 def nicehash_timestamp():
     ''' Gets the timestamp in the correct format for the nicehash api'''
 
-    return str(datetime.datetime.utcnow().timestamp()).replace(".", "")[:-3]
+    return str(round(datetime.datetime.utcnow().timestamp() * 1000))
 
 
 def get_Infos_From_NiceHash(http_method, endpoint, query_params):
@@ -120,6 +120,8 @@ def get_rig_count():
 
 def check():
     ''' Updates all data in prometheus '''
+    
+    check_Cash_Stuff()
 
     group_request = get_Infos_From_NiceHash(
         'GET', '/mining/groups/list', {"extendedResponse": "True"})
@@ -136,7 +138,7 @@ def check():
         'GET', '/mining/rig2/'+second_rig_id, {})
 
     if 'error_id' in stats_request or len(stats_request['data']) == 0 or 'error_id' in mining_request:
-        print("Error")
+        print(group_request, mining_request)
         return
 
     for rig in rigs:
@@ -158,6 +160,30 @@ def check():
         mining_request['localProfitability'])
 
 
+def check_Cash_Stuff():
+    account_request = get_Infos_From_NiceHash(
+        'GET', '/accounting/accounts2', {"extendedResponse": "True", "fiat": "EUR"})
+    payout_request = get_Infos_From_NiceHash(
+        'GET', '/mining/rigs/payouts', {"size": "1"})
+
+    balance = account_request['total']['totalBalance']
+    currencies = account_request['currencies']
+    currency = None
+
+    for c in currencies:
+        if c['currency'] == 'BTC':
+            currency = c
+            break
+
+    payout = payout_request['list'][0]['amount']
+
+    prometheus_data['currency_euro_bitcoin'].set(currency['fiatRate'])
+    prometheus_data['currency_bitcoin_total'].set(balance)
+    prometheus_data['currency_in_euro_total'].set(
+        float(balance)*float(currency['fiatRate']))
+    prometheus_data['currency_latest_payout'].set(payout)
+
+
 prometheus_data = {}
 prometheus_data['rig_count'] = prometheus_client.Gauge(
     'rig_count', 'The number of current rigs')
@@ -168,21 +194,37 @@ prometheus_data['currently_unpaid'] = prometheus_client.Gauge(
 
 prometheus_data['profitability'] = prometheus_client.Gauge(
     'money_profitability_actual', 'The actual profitability of the main rig')
+
 prometheus_data['local_profitability'] = prometheus_client.Gauge(
     'money_profitability_local', 'The theoretical profitability of the main rig')
+
 prometheus_data['rig_temperature'] = prometheus_client.Gauge(
     'rig_temperature', 'Temperature of the gpu')
+
 prometheus_data['rig_load'] = prometheus_client.Gauge(
     'rig_load', 'Load of the gpu')
+
 prometheus_data['rig_power_usage'] = prometheus_client.Gauge(
     'rig_power_usage', 'Power usage of the gpu')
+
+prometheus_data['currency_euro_bitcoin'] = prometheus_client.Gauge(
+    'currency_euro_bitcoin', 'How much Euro is a bitcoin worth')
+
+prometheus_data['currency_bitcoin_total'] = prometheus_client.Gauge(
+    'currency_bitcoin_total', 'How much bitcoin in wallet')
+
+prometheus_data['currency_in_euro_total'] = prometheus_client.Gauge(
+    'currency_in_euro_total', 'How much is wallet worth in euro')
+
+prometheus_data['currency_latest_payout'] = prometheus_client.Gauge(
+    'currency_latest_payout', 'The ammount of the latest payout')
 
 prometheus_client.start_http_server(config.port)
 
 while True:
     try:
         check()
-    except:
-        print("Fail")
+    except Exception as e:
+        print("Error: "+str(e))
     time.sleep(2)
     print(datetime.datetime.now())
