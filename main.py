@@ -9,6 +9,7 @@ import hashlib
 import json
 import urllib
 import time
+#import traceback
 
 
 def getNonce():
@@ -120,7 +121,7 @@ def get_rig_count():
 
 def check():
     ''' Updates all data in prometheus '''
-    
+
     check_Cash_Stuff()
 
     group_request = get_Infos_From_NiceHash(
@@ -136,6 +137,17 @@ def check():
         'GET', '/mining/rig/stats/unpaid', {'rigId': second_rig_id})
     mining_request = get_Infos_From_NiceHash(
         'GET', '/mining/rig2/'+second_rig_id, {})
+    payout_request = get_Infos_From_NiceHash(
+        'GET', '/mining/rigs2', {})
+
+    next_payout = datetime.datetime.strptime(
+        payout_request['nextPayoutTimestamp'], '%Y-%m-%dT%H:%M:%SZ')
+    last_payout = datetime.datetime.strptime(
+        payout_request['lastPayoutTimestamp'], '%Y-%m-%dT%H:%M:%S.%fZ')
+
+    # Timezone adjustment
+    next_payout += datetime.timedelta(hours=1)
+    last_payout += datetime.timedelta(hours=1)
 
     if 'error_id' in stats_request or len(stats_request['data']) == 0 or 'error_id' in mining_request:
         print(group_request, mining_request)
@@ -158,6 +170,11 @@ def check():
     prometheus_data['profitability'].set(mining_request['profitability'])
     prometheus_data['local_profitability'].set(
         mining_request['localProfitability'])
+
+    prometheus_data['currency_last_payout_time'].set(
+        round(last_payout.timestamp() * 1000))
+    prometheus_data['currency_next_payout_time'].set(
+        round(next_payout.timestamp() * 1000))
 
 
 def check_Cash_Stuff():
@@ -219,12 +236,20 @@ prometheus_data['currency_in_euro_total'] = prometheus_client.Gauge(
 prometheus_data['currency_latest_payout'] = prometheus_client.Gauge(
     'currency_latest_payout', 'The ammount of the latest payout')
 
+prometheus_data['currency_last_payout_time'] = prometheus_client.Gauge(
+    'currency_latest_payout_time', 'Time of the last payout')
+
+prometheus_data['currency_next_payout_time'] = prometheus_client.Gauge(
+    'currency_next_payout_time', 'Time of the next payout')
+
 prometheus_client.start_http_server(config.port)
 
 while True:
     try:
         check()
+        time.sleep(5)
     except Exception as e:
         print("Error: "+str(e))
-    time.sleep(2)
+#        traceback.print_exc()
+
     print(datetime.datetime.now())
