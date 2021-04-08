@@ -131,11 +131,11 @@ def check():
         return
 
     rigs = group_request['groups']['']['rigs']
-    ctr=0
+    ctr = 0
     for r in rigs:
-        if r['name']=='JPC':
+        if r['name'] == 'JPC':
             break
-        ctr+=1
+        ctr += 1
 
     second_rig_id = rigs[ctr]["rigId"]
 
@@ -181,7 +181,8 @@ def check():
         round(last_payout.timestamp() * 1000))
     prometheus_data['currency_next_payout_time'].set(
         round(next_payout.timestamp() * 1000))
-    prometheus_data['worker_hashrate'].set(mining_request['devices'][1]['speeds'][0]['speed'])
+    prometheus_data['worker_hashrate'].set(
+        mining_request['devices'][1]['speeds'][0]['speed'])
 
 
 def check_Cash_Stuff():
@@ -204,7 +205,8 @@ def check_Cash_Stuff():
     prometheus_data['currency_euro_bitcoin'].set(currency['fiatRate'])
     prometheus_data['currency_total_in_btc'].set(balance)
     prometheus_data['currency_btc'].set(currency['totalBalance'])
-    prometheus_data['currency_btc_in_euro'].set(float(currency['totalBalance'])*float(currency['fiatRate']))
+    prometheus_data['currency_btc_in_euro'].set(
+        float(currency['totalBalance'])*float(currency['fiatRate']))
     prometheus_data['currency_in_euro_total'].set(
         float(balance)*float(currency['fiatRate']))
     prometheus_data['currency_latest_payout'].set(payout)
