@@ -190,7 +190,8 @@ def check_Cash_Stuff():
         'GET', '/accounting/accounts2', {"extendedResponse": "True", "fiat": "EUR"})
     payout_request = get_Infos_From_NiceHash(
         'GET', '/mining/rigs/payouts', {"size": "1"})
-
+    fees_request = get_Infos_From_NiceHash(
+        'GET', '/public/service/fee/info', {})
     balance = account_request['total']['totalBalance']
     currencies = account_request['currencies']
     currency = None
@@ -211,6 +212,7 @@ def check_Cash_Stuff():
         float(balance)*float(currency['fiatRate']))
     prometheus_data['currency_latest_payout'].set(payout)
 
+    prometheus_data['fee_btc_bitgo'].set(fees_request['withdrawal']['BITGO']['rules']['BTC']['intervals'][0]['element']['sndValue'])
 
 prometheus_data = {}
 prometheus_data['rig_count'] = prometheus_client.Gauge(
@@ -261,6 +263,9 @@ prometheus_data['currency_next_payout_time'] = prometheus_client.Gauge(
 
 prometheus_data['worker_hashrate'] = prometheus_client.Gauge(
     'worker_hashrate', 'Hashrate of worker')
+
+prometheus_data['fee_btc_bitgo'] = prometheus_client.Gauge(
+    'fee_btc_bitgo', 'Fee for withdrawl')
 
 prometheus_client.start_http_server(config.port)
 
