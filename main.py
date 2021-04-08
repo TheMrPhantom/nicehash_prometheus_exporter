@@ -211,8 +211,12 @@ def check_Cash_Stuff():
     prometheus_data['currency_in_euro_total'].set(
         float(balance)*float(currency['fiatRate']))
     prometheus_data['currency_latest_payout'].set(payout)
-
-    prometheus_data['fee_btc_bitgo'].set(fees_request['withdrawal']['BITGO']['rules']['BTC']['intervals'][0]['element']['sndValue'])
+    
+    percentage_fee=fees_request['withdrawal']['BITGO']['rules']['BTC']['intervals'][0]['element']['value']
+    absolute_fee=fees_request['withdrawal']['BITGO']['rules']['BTC']['intervals'][0]['element']['sndValue']
+    btc_fees_complete_withdraw=float(percentage_fee)*float(currency['totalBalance'])+float(absolute_fee)
+    prometheus_data['fee_btc_bitgo_complete'].set(btc_fees_complete_withdraw)
+    prometheus_data['fee_btc_bitgo'].set(absolute_fee)
 
 prometheus_data = {}
 prometheus_data['rig_count'] = prometheus_client.Gauge(
@@ -266,6 +270,9 @@ prometheus_data['worker_hashrate'] = prometheus_client.Gauge(
 
 prometheus_data['fee_btc_bitgo'] = prometheus_client.Gauge(
     'fee_btc_bitgo', 'Fee for withdrawl')
+
+prometheus_data['fee_btc_bitgo_complete'] = prometheus_client.Gauge(
+    'fee_btc_bitgo_complete', 'Fee for withdrawl complete')
 
 prometheus_client.start_http_server(config.port)
 
