@@ -218,6 +218,8 @@ def check_Cash_Stuff():
     prometheus_data['fee_btc_bitgo_complete'].set(btc_fees_complete_withdraw)
     prometheus_data['fee_btc_bitgo'].set(absolute_fee)
 
+print("Starting")
+
 prometheus_data = {}
 prometheus_data['rig_count'] = prometheus_client.Gauge(
     'rig_count', 'The number of current rigs')
@@ -275,6 +277,8 @@ prometheus_data['fee_btc_bitgo_complete'] = prometheus_client.Gauge(
     'fee_btc_bitgo_complete', 'Fee for withdrawl complete')
 
 prometheus_client.start_http_server(config.port)
+
+print("Prometheus client started")
 
 while True:
     print(datetime.datetime.now())
