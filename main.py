@@ -277,6 +277,7 @@ prometheus_data['fee_btc_bitgo_complete'] = prometheus_client.Gauge(
 prometheus_client.start_http_server(config.port)
 
 while True:
+    print(datetime.datetime.now())
     try:
         check()
 #        time.sleep(5)
@@ -284,4 +285,4 @@ while True:
         print("Error: "+str(e))
 #        traceback.print_exc()
     time.sleep(5)
-    print(datetime.datetime.now())
+    
