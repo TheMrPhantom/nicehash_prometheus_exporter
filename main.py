@@ -9,7 +9,7 @@ import hashlib
 import json
 import urllib
 import time
-#import traceback
+import traceback
 
 
 def getNonce():
@@ -287,6 +287,6 @@ while True:
 #        time.sleep(5)
     except Exception as e:
         print("Error: "+str(e))
-#        traceback.print_exc()
+        traceback.print_exc()
     time.sleep(5)
     
