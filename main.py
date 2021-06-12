@@ -9,7 +9,7 @@ import hashlib
 import json
 import urllib
 import time
-import traceback
+#import traceback
 
 
 def getNonce():
@@ -61,8 +61,8 @@ def sign_request(api_key, api_secret, orga_id, url, parameter, http_method, time
 
 def nicehash_timestamp():
     ''' Gets the timestamp in the correct format for the nicehash api'''
-
-    return str(round(datetime.datetime.utcnow().timestamp() * 1000)+1000*60*60)
+    return str(round(datetime.datetime.utcnow().timestamp() * 1000))
+    #return str(round(datetime.datetime.utcnow().timestamp() * 1000)+1000*60*60)
 
 
 def get_Infos_From_NiceHash(http_method, endpoint, query_params):
@@ -287,6 +287,6 @@ while True:
 #        time.sleep(5)
     except Exception as e:
         print("Error: "+str(e))
-        traceback.print_exc()
+        #traceback.print_exc()
     time.sleep(5)
     
